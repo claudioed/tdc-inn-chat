@@ -60,9 +60,16 @@ public class MainVerticle extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) {
     initConfig().result();
+
+    LOG.info("Starting configurations....");
+
     this.datasourceConfig = new DatasourceConfig(config().getJsonObject("database", new JsonObject()));
     this.policeOfficerConfig = new PoliceOfficerConfig(config().getJsonObject("police-officer", new JsonObject()));
     this.apiConfig = new OpenAPIConfig(config().getJsonObject("openAPI", new JsonObject()));
+
+    LOG.info("Configuration done successfully!!");
+
+    LOG.info("Creating gRPC stubs...");
 
     ManagedChannel channel = VertxChannelBuilder
       .forAddress(vertx, this.policeOfficerConfig.getHost(), this.policeOfficerConfig.getPort())
@@ -70,6 +77,10 @@ public class MainVerticle extends AbstractVerticle {
       .build();
 
     this.policeOfficer = PoliceOfficerGrpc.newFutureStub(channel);
+
+    LOG.info("gRPC stubs created successfully!!!");
+
+    LOG.info("Creating database configuration...");
 
     PgConnectOptions connectOptions = new PgConnectOptions()
       .setPort(this.datasourceConfig.getPort())
@@ -83,10 +94,14 @@ public class MainVerticle extends AbstractVerticle {
 
     client = PgPool.pool(this.vertx, connectOptions, poolOptions);
 
-    CompositeFuture.all(updateDB(),jwtAuth().compose(this::createRouter).compose(this::startServer).onComplete(res ->{
+    LOG.info("Database configured successfully!!!");
+
+    CompositeFuture.all(updateDB(),jwtAuth().compose(this::createRouter).compose(this::startServer).onSuccess(res ->{
       LOG.info("Chat started!");
       startPromise.complete();
-    }));
+    })).onFailure(err -> {
+      startPromise.fail("Fail on chat starting.");
+    });
   }
 
   private Future<HttpServer> startServer(Router router){
