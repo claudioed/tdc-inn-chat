@@ -53,6 +53,8 @@ public class MainVerticle extends AbstractVerticle {
 
   private OpenAPIConfig apiConfig;
 
+  private JwtConfig jwtConfig;
+
   private PgPool client;
 
   private PoliceOfficerGrpc.PoliceOfficerFutureStub policeOfficer;
@@ -66,6 +68,7 @@ public class MainVerticle extends AbstractVerticle {
     this.datasourceConfig = new DatasourceConfig(config().getJsonObject("database", new JsonObject()));
     this.policeOfficerConfig = new PoliceOfficerConfig(config().getJsonObject("police-officer", new JsonObject()));
     this.apiConfig = new OpenAPIConfig(config().getJsonObject("openAPI", new JsonObject()));
+    this.jwtConfig = new JwtConfig(config().getJsonObject("jwt"));
 
     LOG.info("Configuration done successfully!!");
 
@@ -149,9 +152,8 @@ public class MainVerticle extends AbstractVerticle {
 
   private Future<JWTAuth> jwtAuth() {
     LOG.info("Starting configuring IDP servers...");
-    LOG.info("===== IDP ===== " + config().getJsonObject("jwt"));
+    LOG.info("===== IDP ===== " + this.jwtConfig.issuer());
     var promise = Promise.<JWTAuth>promise();
-    var jwtConfig = new JwtConfig(config().getJsonObject("jwt"));
     LOG.info("IDP server: " + jwtConfig.issuer());
     var jwksUri = jwtConfig.jwks();
     var webClient = WebClient.create(this.vertx);
