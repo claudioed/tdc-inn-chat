@@ -1,0 +1,189 @@
+openapi: 3.0.3
+info:
+  title: chat
+  version: '1.0'
+  contact:
+    name: Claudio E. de Oliveira
+    url: 'https://claudioed.tech'
+    email: claudioed.oliveira@gmail.com
+  license:
+    name: MIT
+  description: Chat Systems. This API enable people to chat with others.
+tags:
+  - name: threads
+    description: Threads API's
+servers:
+  - url: 'http://localhost:3000'
+    description: local
+paths:
+  /threads:
+    post:
+      summary: Create New Thread
+      tags:
+        - threads
+      operationId: create-thread
+      responses:
+        '200':
+          description: Thread Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadCreated'
+              examples: {}
+        '400':
+          description: Missing Required Information
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewThread'
+            examples:
+              CG GO Topic:
+                value:
+                  topic: CS GO
+                  users:
+                    - 5a391375-f547-4f45-8daa-9fe2011ace4c
+                    - c7e167ae-4c52-4eae-8975-9f2f0b225bc2
+        description: Post the necessary fields for the API to create a new thread.
+      description: Create a new thread
+    parameters: []
+  '/threads/{id}/messages':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Get Messages from Thread
+      tags:
+        - threads
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageCreated'
+              examples:
+                example-1:
+                  value:
+                    - id: string
+                      content: string
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      operationId: get-messages
+      description: Get messages from thread
+    post:
+      summary: 'Create Messages in Thread'
+      operationId: create-messages
+      tags:
+        - threads
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageCreated'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewMessage'
+      description: Create messages in thread
+components:
+  schemas:
+    ThreadCreated:
+      title: ThreadCreated
+      type: object
+      description: Thread Created
+      x-examples:
+        CS Go Created:
+          id: 8978367e-0688-4f87-8e95-aad71bd589b9
+          topic: CS GO
+          owner: 8978367e-7880-4f87-8e95-aad71bd589b9
+          users:
+            - 07c269fd-f873-4bc4-9530-a36327da3734
+            - 81dc5d7a-78f7-4e11-a9f1-46e5c1d42111
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the given user.
+        topic:
+          type: string
+        users:
+          type: array
+          items:
+            type: string
+        owner:
+          type: string
+          description: Thread owner
+      required:
+        - id
+        - topic
+        - users
+        - owner
+    NewMessage:
+      title: NewMessage
+      type: object
+      properties:
+        content:
+          type: string
+    NewThread:
+      title: NewThread
+      type: object
+      properties:
+        topic:
+          type: string
+        users:
+          type: array
+          items:
+            type: string
+      x-examples:
+        CS GO:
+          topic: Cs GO
+          users:
+            - ecd9d3cd-c2ea-443e-b9e4-67e87a057352
+            - daee9883-4f08-48aa-bc22-585a0884932b
+    MessageCreated:
+      title: MessageCreated
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+      x-examples:
+        Play Message:
+          id: f9182726-b003-4144-8bcc-a29ba6e45d15
+          content: I will try to play today!!!
+    Messages:
+      title: Messages
+      type: object
+      x-examples:
+        All Messages:
+          messages:
+            - id: f9182726-b003-4144-8bcc-a29ba6e45d15
+              content: I will try to play today!!!
+      properties:
+        messages:
+          $ref: '#/components/schemas/MessageCreated'
+  securitySchemes:
+    Authorization:
+      type: openIdConnect
+      openIdConnectUrl: 'http://localhost:8080/auth/realms/tdc-innovation/.well-known/openid-configuration'
+
+security:
+  - openId:
+      - openid

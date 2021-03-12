@@ -1,0 +1,17 @@
+CREATE TABLE threads
+(
+    id   VARCHAR(1000) NOT NULL PRIMARY KEY,
+    topic VARCHAR(200) NOT NULL,
+    owner VARCHAR(1000) NOT NULL,
+    users VARCHAR(5000) NOT NULL
+);
+
+
+
+CREATE TABLE messages
+(
+    id        VARCHAR(1000) NOT NULL PRIMARY KEY,
+    thread_id VARCHAR(1000) NOT NULL,
+    user_id   VARCHAR(1000) NOT NULL,
+    message VARCHAR(10000) NOT NULL
+);

@@ -1,0 +1,17 @@
+{
+  "database" : {
+    "host": "localhost",
+    "port":5433,
+    "database": "chat",
+    "user" : "admin",
+    "password": "admin"
+  },
+  "jwt": {
+    "issuer" : "http://localhost:8080/auth/realms/tdc-innovation"
+  },
+  "police-office": {
+    "host" : "localhost",
+    "port" : 7777
+  },
+  "openAPI" : "src/main/resources/oas.yaml"
+}
