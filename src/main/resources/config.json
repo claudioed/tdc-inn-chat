@@ -9,7 +9,7 @@
   "jwt": {
     "issuer" : "http://localhost:8080/auth/realms/tdc-innovation"
   },
-  "police-office": {
+  "police-officer": {
     "host" : "localhost",
     "port" : 7777
   },

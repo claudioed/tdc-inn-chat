@@ -6,13 +6,13 @@ import java.net.URI;
 
 public class JwtConfig {
 
-  private final JsonObject jwt;
+  private final String issuer;
 
   public JwtConfig(JsonObject jwtConfig) {
-    this.jwt = jwtConfig.getJsonObject("jwt");
+    this.issuer = jwtConfig.getString("issuer");
   }
   public String issuer(){
-    return this.jwt.getString("issuer");
+    return this.issuer;
   }
 
   public URI jwks(){
@@ -20,10 +20,6 @@ public class JwtConfig {
     var jwks = String.format("%s://%s:%d%s", issuerUri.getScheme(), issuerUri.getHost(), issuerUri.getPort(),
         issuerUri.getPath() + "/protocol/openid-connect/certs");
     return URI.create(jwks);
-  }
-
-  public JsonObject getJwt() {
-    return jwt;
   }
 
 }

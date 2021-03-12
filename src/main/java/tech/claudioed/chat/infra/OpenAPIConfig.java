@@ -1,13 +1,11 @@
 package tech.claudioed.chat.infra;
 
-import io.vertx.core.json.JsonObject;
-
 public class OpenAPIConfig {
 
   private final String path;
 
-  public OpenAPIConfig(JsonObject config) {
-    path = config.getString("openAPI");
+  public OpenAPIConfig(String cfg) {
+    path = cfg;
   }
 
   public String getPath() {

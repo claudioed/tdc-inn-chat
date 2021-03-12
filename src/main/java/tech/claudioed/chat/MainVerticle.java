@@ -61,49 +61,49 @@ public class MainVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) {
-    initConfig().result();
+    initConfig().onSuccess(cfg -> {
+      LOG.info("Starting configurations....");
 
-    LOG.info("Starting configurations....");
+      this.datasourceConfig = new DatasourceConfig(cfg.getJsonObject("database", new JsonObject()));
+      this.policeOfficerConfig = new PoliceOfficerConfig(cfg.getJsonObject("police-officer", new JsonObject()));
+      this.apiConfig = new OpenAPIConfig(cfg.getString("openAPI"));
+      this.jwtConfig = new JwtConfig(cfg.getJsonObject("jwt"));
 
-    this.datasourceConfig = new DatasourceConfig(config().getJsonObject("database", new JsonObject()));
-    this.policeOfficerConfig = new PoliceOfficerConfig(config().getJsonObject("police-officer", new JsonObject()));
-    this.apiConfig = new OpenAPIConfig(config().getJsonObject("openAPI", new JsonObject()));
-    this.jwtConfig = new JwtConfig(config().getJsonObject("jwt"));
+      LOG.info("Configuration done successfully!!");
 
-    LOG.info("Configuration done successfully!!");
+      LOG.info("Creating gRPC stubs...");
 
-    LOG.info("Creating gRPC stubs...");
+      ManagedChannel channel = VertxChannelBuilder
+        .forAddress(vertx, this.policeOfficerConfig.getHost(), this.policeOfficerConfig.getPort())
+        .usePlaintext()
+        .build();
 
-    ManagedChannel channel = VertxChannelBuilder
-      .forAddress(vertx, this.policeOfficerConfig.getHost(), this.policeOfficerConfig.getPort())
-      .usePlaintext()
-      .build();
+      this.policeOfficer = PoliceOfficerGrpc.newFutureStub(channel);
 
-    this.policeOfficer = PoliceOfficerGrpc.newFutureStub(channel);
+      LOG.info("gRPC stubs created successfully!!!");
 
-    LOG.info("gRPC stubs created successfully!!!");
+      LOG.info("Creating database configuration...");
 
-    LOG.info("Creating database configuration...");
+      PgConnectOptions connectOptions = new PgConnectOptions()
+        .setPort(this.datasourceConfig.getPort())
+        .setHost(this.datasourceConfig.getHost())
+        .setDatabase(this.datasourceConfig.getDatabase())
+        .setUser(this.datasourceConfig.getUser())
+        .setPassword(this.datasourceConfig.getPassword());
 
-    PgConnectOptions connectOptions = new PgConnectOptions()
-      .setPort(this.datasourceConfig.getPort())
-      .setHost(this.datasourceConfig.getHost())
-      .setDatabase(this.datasourceConfig.getDatabase())
-      .setUser(this.datasourceConfig.getUser())
-      .setPassword(this.datasourceConfig.getPassword());
+      PoolOptions poolOptions = new PoolOptions()
+        .setMaxSize(5);
 
-    PoolOptions poolOptions = new PoolOptions()
-      .setMaxSize(5);
+      client = PgPool.pool(this.vertx, connectOptions, poolOptions);
 
-    client = PgPool.pool(this.vertx, connectOptions, poolOptions);
+      LOG.info("Database configured successfully!!!");
 
-    LOG.info("Database configured successfully!!!");
-
-    CompositeFuture.all(updateDB(),jwtAuth().compose(this::createRouter).compose(this::startServer).onSuccess(res ->{
-      LOG.info("Chat started!");
-      startPromise.complete();
-    })).onFailure(err -> {
-      startPromise.fail("Fail on chat starting.");
+      CompositeFuture.all(updateDB(),jwtAuth().compose(this::createRouter).compose(this::startServer).onSuccess(res ->{
+        LOG.info("Chat started!");
+        startPromise.complete();
+      })).onFailure(err -> {
+        startPromise.fail("Fail on chat starting.");
+      });
     });
   }
 
