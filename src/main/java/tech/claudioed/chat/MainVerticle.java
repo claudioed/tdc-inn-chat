@@ -148,6 +148,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private Future<JWTAuth> jwtAuth() {
+    LOG.info("Starting configuring IDP servers...");
     var promise = Promise.<JWTAuth>promise();
     var jwtConfig = new JwtConfig(config().getJsonObject("jwt", new JsonObject()));
     var jwksUri = jwtConfig.jwks();
@@ -157,6 +158,7 @@ public class MainVerticle extends AbstractVerticle {
       .as(BodyCodec.jsonObject())
       .send(ar -> {
         if (!ar.succeeded()) {
+          LOG.error("Fail on IDP configuration",ar.cause());
           promise.fail(String.format("Could not fetch JWKS from URI: %s", jwksUri));
           return;
         }
@@ -176,9 +178,10 @@ public class MainVerticle extends AbstractVerticle {
         jwtAuthOptions.setJWTOptions(jwtOptions);
         // TODO authorizer
         JWTAuth jwtAuth = JWTAuth.create(vertx, jwtAuthOptions);
+        LOG.info("IDP configured successfully!!");
         promise.complete(jwtAuth);
       });
-
+    LOG.info("Still configuring IDP servers...");
     return promise.future().compose(Future::succeededFuture);
   }
 
