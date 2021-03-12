@@ -149,6 +149,7 @@ public class MainVerticle extends AbstractVerticle {
 
   private Future<JWTAuth> jwtAuth() {
     LOG.info("Starting configuring IDP servers...");
+    LOG.info("===== IDP ===== " + config().getJsonObject("jwt"));
     var promise = Promise.<JWTAuth>promise();
     var jwtConfig = new JwtConfig(config().getJsonObject("jwt"));
     LOG.info("IDP server: " + jwtConfig.issuer());
