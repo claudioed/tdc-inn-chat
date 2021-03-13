@@ -27,7 +27,7 @@ public class UserDataVerticle extends AbstractVerticle {
     initConfig().compose(this::userServiceConfig).onSuccess(userServiceConfig ->{
       this.vertx.eventBus().consumer("request.user.data",handler ->{
         var userId = Json.decodeValue(handler.body().toString(), UserId.class);
-        var url = String.format("%s:%d/users/%s",userServiceConfig.getHost(),userServiceConfig.getPort(),userId.getId());
+        var url = String.format("http://%s:%d/users/%s",userServiceConfig.getHost(),userServiceConfig.getPort(),userId.getId());
         client.getAbs(url).send().onSuccess(userData -> {
           var user = Json.decodeValue(userData.body(), User.class);
           if(!user.isBlocked()){
