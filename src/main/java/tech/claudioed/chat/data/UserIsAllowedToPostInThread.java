@@ -9,7 +9,7 @@ public class UserIsAllowedToPostInThread {
   }
 
   public Boolean isSatisfied(Thread thread){
-    return this.userId.equals(thread.getOwner()) || thread.getUsersInThread().contains(userId);
+    return this.userId.equals(thread.getOwner()) || thread.checkUserInThread(this.userId);
   }
 
 }

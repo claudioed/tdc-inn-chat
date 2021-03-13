@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.templates.annotations.Column;
 import io.vertx.sqlclient.templates.annotations.ParametersMapped;
 import io.vertx.sqlclient.templates.annotations.RowMapped;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,4 +83,9 @@ public class Thread {
   public void setOwner(String owner) {
     this.owner = owner;
   }
+
+  public boolean checkUserInThread(String user){
+    return Arrays.stream(this.users.split(",")).collect(Collectors.toSet()).contains(user);
+  }
+
 }
