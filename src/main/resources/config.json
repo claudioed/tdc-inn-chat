@@ -13,5 +13,9 @@
     "host" : "localhost",
     "port" : 7777
   },
+  "user-service": {
+    "host" : "localhost",
+    "port": 9999
+  },
   "openAPI" : "src/main/resources/oas.yaml"
 }
