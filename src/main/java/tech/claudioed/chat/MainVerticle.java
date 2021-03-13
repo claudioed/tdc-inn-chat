@@ -158,7 +158,7 @@ public class MainVerticle extends AbstractVerticle {
     var jwksUri = jwtConfig.jwks();
     var webClient = WebClient.create(this.vertx);
     // fetch JWKS from `/certs` endpoint
-    webClient.get(jwksUri.getPort(), jwksUri.getHost(), jwksUri.getPath())
+    webClient.getAbs(jwksUri)
       .as(BodyCodec.jsonObject())
       .send(ar -> {
         if (!ar.succeeded()) {
@@ -178,6 +178,7 @@ public class MainVerticle extends AbstractVerticle {
           .collect(Collectors.toList());
         // configure JWTAuth
         var jwtAuthOptions = new JWTAuthOptions();
+
         jwtAuthOptions.setJwks(jwks);
         jwtAuthOptions.setJWTOptions(jwtOptions);
         // TODO authorizer

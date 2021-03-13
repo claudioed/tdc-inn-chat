@@ -7,7 +7,7 @@
     "password": "admin"
   },
   "jwt": {
-    "issuer" : "http://localhost:8080/auth/realms/tdc-innovation"
+    "issuer" : "http://35.188.212.146/auth/realms/tdc-innovation"
   },
   "police-officer": {
     "host" : "localhost",

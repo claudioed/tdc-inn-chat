@@ -15,11 +15,10 @@ public class JwtConfig {
     return this.issuer;
   }
 
-  public URI jwks(){
+  public String jwks(){
     var issuerUri = URI.create(issuer());
-    var jwks = String.format("%s://%s:%d%s", issuerUri.getScheme(), issuerUri.getHost(), issuerUri.getPort(),
+    return String.format("%s://%s%s", issuerUri.getScheme(), issuerUri.getHost(),
         issuerUri.getPath() + "/protocol/openid-connect/certs");
-    return URI.create(jwks);
   }
 
 }
