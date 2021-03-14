@@ -2,10 +2,12 @@ package tech.claudioed.chat.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.SqlResult;
@@ -27,6 +29,8 @@ public class CreateMessageHandler implements Handler<RoutingContext> {
 
   private final PoliceOfficerGrpc.PoliceOfficerFutureStub policeOfficer;
 
+  private final DeliveryOptions deliveryOptions = new DeliveryOptions().setTracingPolicy(TracingPolicy.ALWAYS);
+
   public CreateMessageHandler(PgPool dbClient, Vertx vertx, PoliceOfficerGrpc.PoliceOfficerFutureStub policeOfficer) {
     this.dbClient = dbClient;
     this.vertx = vertx;
@@ -41,10 +45,9 @@ public class CreateMessageHandler implements Handler<RoutingContext> {
         "INSERT INTO messages (id, thread_id, user_id, message)  VALUES ( #{id}, #{thread_id}, #{user_id}, #{message} )")
       .mapFrom(
         MessageParametersMapper.INSTANCE);
-
     var userId = rc.user().principal().getString("sub");
     var threadId = rc.pathParam("id");
-    this.vertx.eventBus().request("request.user.data", Json.encode(new UserId(userId))).onSuccess(user -> {
+    this.vertx.eventBus().request("request.user.data", Json.encode(new UserId(userId)),this.deliveryOptions).onSuccess(user -> {
       SqlTemplate.forQuery(this.dbClient,"SELECT * FROM threads WHERE id=#{id}").mapTo(ThreadRowMapper.INSTANCE).execute(
         Collections.singletonMap("id",threadId)).onSuccess(rows ->{
         if(rows.iterator().hasNext()){
@@ -82,6 +85,5 @@ public class CreateMessageHandler implements Handler<RoutingContext> {
       rc.response().putHeader("content-type", "application/json; charset=utf-8").setStatusCode(400).end();
     });
   }
-
 
 }

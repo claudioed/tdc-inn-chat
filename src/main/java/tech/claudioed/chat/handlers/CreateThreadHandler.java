@@ -2,10 +2,12 @@ package tech.claudioed.chat.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.SqlResult;
@@ -23,6 +25,8 @@ public class CreateThreadHandler implements Handler<RoutingContext> {
 
   private final Vertx vertx;
 
+  private final DeliveryOptions deliveryOptions = new DeliveryOptions().setTracingPolicy(TracingPolicy.ALWAYS);
+
   public CreateThreadHandler(PgPool dbClient, Vertx vertx) {
     this.dbClient = dbClient;
     this.vertx = vertx;
@@ -31,7 +35,7 @@ public class CreateThreadHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext rc) {
     var userId = rc.user().principal().getString("sub");
-    this.vertx.eventBus().request("request.user.data", Json.encode(new UserId(userId)))
+    this.vertx.eventBus().request("request.user.data", Json.encode(new UserId(userId)),this.deliveryOptions)
       .onSuccess(data -> {
         var user = Json.decodeValue(data.body().toString(), User.class);
         SqlTemplate<Thread, SqlResult<Void>> insertTemplate = SqlTemplate

@@ -6,10 +6,12 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClient;
 import tech.claudioed.chat.data.User;
 import tech.claudioed.chat.data.UserId;
@@ -20,6 +22,8 @@ public class UserDataVerticle extends AbstractVerticle {
   Logger LOG = LoggerFactory.getLogger(this.getClass());
 
   private UserServiceConfig userServiceConfig;
+
+  private final DeliveryOptions deliveryOptions = new DeliveryOptions().setTracingPolicy(TracingPolicy.ALWAYS);
 
   @Override
   public void start(Promise<Void> startPromise) {
@@ -32,7 +36,7 @@ public class UserDataVerticle extends AbstractVerticle {
           var user = Json.decodeValue(userData.body(), User.class);
           if(!user.isBlocked()){
             LOG.info("User allowed to post");
-            handler.reply(Json.encode(user));
+            handler.reply(Json.encode(user),this.deliveryOptions);
           }else{
             LOG.error("User is blocked. Check with administrator");
             handler.fail(1000,"user is blocked");
