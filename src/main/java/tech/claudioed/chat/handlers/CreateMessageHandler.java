@@ -1,5 +1,6 @@
 package tech.claudioed.chat.handlers;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -9,6 +10,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.SqlResult;
 import io.vertx.sqlclient.templates.SqlTemplate;
@@ -21,6 +23,8 @@ import java.util.UUID;
 
 public class CreateMessageHandler implements Handler<RoutingContext> {
 
+  private static final String NEW_MESSAGE_METRIC = "new_messages";
+
   private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
   private final PgPool dbClient;
@@ -30,6 +34,8 @@ public class CreateMessageHandler implements Handler<RoutingContext> {
   private final PoliceOfficerGrpc.PoliceOfficerFutureStub policeOfficer;
 
   private final DeliveryOptions deliveryOptions = new DeliveryOptions().setTracingPolicy(TracingPolicy.ALWAYS);
+
+  private final MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
 
   public CreateMessageHandler(PgPool dbClient, Vertx vertx, PoliceOfficerGrpc.PoliceOfficerFutureStub policeOfficer) {
     this.dbClient = dbClient;
@@ -60,6 +66,7 @@ public class CreateMessageHandler implements Handler<RoutingContext> {
                 var data = MessageData.newBuilder()
                   .setMessageId(message.getId()).setContent(message.getMessage()).setUserId(message.getUserId()).setThreadId(message.getThreadId()).build();
                 this.policeOfficer.registry(data);
+                this.meterRegistry.counter(NEW_MESSAGE_METRIC,"user_id",message.getUserId()).increment();
                 rc.response().putHeader("content-type", "application/json; charset=utf-8")
                   .setStatusCode(201).end(message.toJson().encode());
               } else {

@@ -1,5 +1,6 @@
 package tech.claudioed.chat.handlers;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -9,6 +10,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.SqlResult;
 import io.vertx.sqlclient.templates.SqlTemplate;
@@ -19,6 +21,8 @@ import java.util.UUID;
 
 public class CreateThreadHandler implements Handler<RoutingContext> {
 
+  private static final String NEW_THREAD_METRIC = "new_threads";
+
   private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
   private final PgPool dbClient;
@@ -26,6 +30,8 @@ public class CreateThreadHandler implements Handler<RoutingContext> {
   private final Vertx vertx;
 
   private final DeliveryOptions deliveryOptions = new DeliveryOptions().setTracingPolicy(TracingPolicy.ALWAYS);
+
+  private final MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
 
   public CreateThreadHandler(PgPool dbClient, Vertx vertx) {
     this.dbClient = dbClient;
@@ -49,6 +55,7 @@ public class CreateThreadHandler implements Handler<RoutingContext> {
         insertTemplate.execute(thread).onSuccess(result -> {
           if (result.rowCount() > 0) {
             var threadCreated = ThreadCreated.createNew(thread.getId(),thread.getTopic(),thread.getUsersInThread(),thread.getOwner());
+            this.meterRegistry.counter(NEW_THREAD_METRIC,"owner_id",threadCreated.getOwner()).increment();
             rc.response().putHeader("content-type", "application/json; charset=utf-8")
               .setStatusCode(201).end(Json.encode(threadCreated));
           } else {
