@@ -65,8 +65,8 @@ public class CreateMessageHandler implements Handler<RoutingContext> {
               if (result.rowCount() > 0) {
                 var data = MessageData.newBuilder()
                   .setMessageId(message.getId()).setContent(message.getMessage()).setUserId(message.getUserId()).setThreadId(message.getThreadId()).build();
-                this.policeOfficer.registry(data);
                 this.meterRegistry.counter(NEW_MESSAGE_METRIC,"user_id",message.getUserId()).increment();
+                this.policeOfficer.registry(data);
                 rc.response().putHeader("content-type", "application/json; charset=utf-8")
                   .setStatusCode(201).end(message.toJson().encode());
               } else {
